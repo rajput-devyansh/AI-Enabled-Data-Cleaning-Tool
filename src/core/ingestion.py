@@ -112,3 +112,40 @@ class IngestionEngine:
         except Exception as e:
             print(f"Parquet Conversion Failed: {e}")
             return False
+        
+    # ... inside IngestionEngine class ...
+
+    def merge_and_finalize(self, clean_csv_path: str, fixed_csv_path: str, final_parquet_path: str) -> Dict[str, int]:
+        """
+        Merges the original clean data with the user-repaired data 
+        and converts everything to the Master Parquet file.
+        """
+        try:
+            # 1. Read the Clean Data
+            df_clean = pl.scan_csv(clean_csv_path)
+            
+            # 2. Read the Fixed Data (if exists)
+            if os.path.exists(fixed_csv_path) and os.path.getsize(fixed_csv_path) > 0:
+                # We need to ensure schemas match exactly
+                # We read schema from clean data to enforce it on fixed data
+                schema = pl.read_csv(clean_csv_path, n_rows=0).schema
+                
+                try:
+                    df_fixed = pl.scan_csv(fixed_csv_path, schema=schema)
+                    # Concatenate (Lazy)
+                    df_final = pl.concat([df_clean, df_fixed])
+                except Exception as e:
+                    print(f"Merge Error: {e}. Ignoring fixed rows.")
+                    df_final = df_clean
+            else:
+                df_final = df_clean
+
+            # 3. Sink to Parquet
+            df_final.sink_parquet(final_parquet_path)
+            
+            # 4. Count rows for confirmation
+            final_count = pl.read_parquet(final_parquet_path).height
+            return {"success": True, "total_rows": final_count}
+            
+        except Exception as e:
+            return {"success": False, "error": str(e)}
