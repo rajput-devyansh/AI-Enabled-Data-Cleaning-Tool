@@ -138,7 +138,9 @@ def main():
                     with open(clean_path, 'r') as f: header = f.readline().strip().split(',')
                     
                     fixed_file = os.path.join(manager.processed_dir, "fixed_ai.csv")
-                    with open(fixed_file, 'w') as f:
+                    
+                    # --- FIX: ADD encoding='utf-8' HERE TO PREVENT CHARMAP ERROR ---
+                    with open(fixed_file, 'w', encoding='utf-8', newline='') as f:
                         f.write(",".join(header) + "\n")
                         for index, row in edited_preview.iterrows():
                             # If AI failed on a row, skip it or write raw
@@ -173,7 +175,7 @@ def main():
 
                 # --- STRATEGY B: AI FIX ---
                 if c1.button("🤖 AI Auto-Fix", use_container_width=True):
-                    # Use the specific model name from your screenshot
+                    # Use the specific model name
                     fixer = AIFixer(model_name="phi4-mini-reasoning:3.8b")
                     
                     with st.status("AI Agent analyzing rows...", expanded=True) as status:
@@ -229,7 +231,8 @@ def main():
                         fixed_file = os.path.join(manager.processed_dir, "fixed_manual.csv")
                         with open(clean_path, 'r') as f: header = f.readline().strip()
                         
-                        with open(fixed_file, 'w') as f:
+                        # --- FIX: ADD encoding='utf-8' HERE ALSO ---
+                        with open(fixed_file, 'w', encoding='utf-8', newline='') as f:
                             f.write(header + "\n")
                             for item in edited_df:
                                 f.write(item["raw_text"] + "\n")
