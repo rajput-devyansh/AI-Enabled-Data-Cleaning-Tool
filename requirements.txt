@@ -1,2 +1,3 @@
 polars
 charset_normalizer
+streamlit
