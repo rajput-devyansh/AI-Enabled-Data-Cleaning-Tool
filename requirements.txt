@@ -1,3 +1,4 @@
 polars
 charset_normalizer
 streamlit
+langchain_ollama
